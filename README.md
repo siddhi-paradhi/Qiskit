@@ -40,7 +40,7 @@ Welcome to my departmental internship project repository focused on **Quantum Co
 ## Author
 
 **Siddhi Paradhi**  
-Department of Electronics and Telecommunication  
+Department of Electronics and Computer Science  
 Pillai College of Engineering  
 June 2025
 
