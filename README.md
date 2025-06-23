@@ -1,6 +1,6 @@
 # Implementing and Analyzing Quantum Algorithms Using Qiskit
 
-Welcome to my departmental internship project repository focused on **Quantum Computing with Qiskit**. This 4-week internship involves implementing quantum algorithms, analyzing their classical counterparts, and comparing performance across various metrics.
+This repository is focused on **Quantum Computing with Qiskit**. It involves implementing quantum algorithms, analyzing their classical counterparts, and comparing performance across various metrics.
 
 ---
 
