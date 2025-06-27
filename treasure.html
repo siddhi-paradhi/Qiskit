@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Treasure Hunt</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --secondary-dark: #059669;
+            --accent: #f59e0b;
+            --accent-dark: #d97706;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.75rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(90deg, var(--accent), var(--light));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 1.15rem;
+            color: rgba(255, 255, 255, 0.85);
+            max-width: 600px;
+            margin: 0 auto;
+            font-weight: 400;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 200px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select {
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            color: var(--light);
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+        }
+
+        button {
+            padding: 0.75rem 1.75rem;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-secondary {
+            background: var(--card-bg);
+            color: var(--light);
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .game-area {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title::before {
+            content: "";
+            display: block;
+            width: 6px;
+            height: 1.25rem;
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-4x4 { grid-template-columns: repeat(4, 1fr); }
+        .grid-6x6 { grid-template-columns: repeat(6, 1fr); }
+        .grid-8x8 { grid-template-columns: repeat(8, 1fr); }
+
+        .cell {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            color: var(--light);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .cell:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        .cell.searching {
+            background: rgba(245, 158, 11, 0.2);
+            animation: pulse 1.5s infinite;
+        }
+
+        .cell.found {
+            background: var(--success);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .cell.treasure {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            animation: treasure-glow 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes treasure-glow {
+            0%, 100% { 
+                box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 25px rgba(245, 158, 11, 0.8);
+                transform: scale(1.05);
+            }
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-item {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--light);
+        }
+
+        .algorithm-comparison {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .algorithm-card {
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: var(--card-bg);
+            border-left: 4px solid;
+        }
+
+        .classical {
+            border-left-color: var(--danger);
+        }
+
+        .quantum {
+            border-left-color: var(--success);
+        }
+
+        .algorithm-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .progress-container {
+            margin: 1rem 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .classical .progress-fill {
+            background: var(--danger);
+        }
+
+        .quantum .progress-fill {
+            background: var(--success);
+        }
+
+        .formula {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            margin-top: 1rem;
+            color: var(--light);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .info-box {
+            margin-top: 1.5rem;
+        }
+
+        .info-text {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.75rem;
+            line-height: 1.7;
+        }
+
+        .info-text strong {
+            color: var(--light);
+            font-weight: 600;
+        }
+
+        /* Sparkle animation for treasure found */
+        @keyframes sparkle {
+            0% { transform: scale(0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: sparkle 1s ease-out forwards;
+            filter: drop-shadow(0 0 4px white);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Quantum Treasure Hunt</h1>
+            <p class="subtitle">Experience the power of Grover's Quantum Search Algorithm by finding hidden treasures in record time</p>
+        </header>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="gridSize">Grid Size</label>
+                <select id="gridSize">
+                    <option value="4">4×4 (16 cells)</option>
+                    <option value="6">6×6 (36 cells)</option>
+                    <option value="8">8×8 (64 cells)</option>
+                </select>
+            </div>
+            <button id="startSearch" class="btn-primary">
+                Start Quantum Search
+            </button>
+            <button id="reset" class="btn-secondary">
+                Reset Game
+            </button>
+        </div>
+
+        <div class="game-area">
+            <div class="card">
+                <h2 class="section-title">Treasure Grid</h2>
+                <div id="grid" class="grid grid-4x4"></div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Total Cells</div>
+                        <div id="totalCells" class="stat-value">16</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Searches Made</div>
+                        <div id="searchCount" class="stat-value">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Treasure Found</div>
+                        <div id="treasureFound" class="stat-value">No</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title">Algorithm Comparison</h2>
+                
+                <div class="algorithm-comparison">
+                    <div class="algorithm-card classical">
+                        <h3 class="algorithm-title">Classical Search</h3>
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>Expected searches:</span>
+                                <span id="classicalExpected" class="highlight">8</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div id="classicalProgress" class="progress-fill"></div>
+                            </div>
+                        </div>
+                        <div class="formula">Linear time complexity: O(N)</div>
+                    </div>
+
+                    <div class="algorithm-card quantum">
+                        <h3 class="algorithm-title">Grover's Quantum Search</h3>
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>Expected searches:</span>
+                                <span id="quantumExpected" class="highlight">2</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div id="quantumProgress" class="progress-fill"></div>
+                            </div>
+                        </div>
+                        <div class="formula">Quadratic speedup: O(√N)</div>
+                    </div>
+
+                    <div class="info-box">
+                        <p class="info-text">
+                            <strong>Classical search</strong> checks each cell sequentially until the treasure is found, requiring up to N checks for N cells.
+                        </p>
+                        <p class="info-text">
+                            <strong>Quantum search</strong> uses superposition and amplitude amplification to find the treasure with only √N operations.
+                        </p>
+                        <div class="formula">
+                            Quantum speedup factor: √N
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class QuantumTreasureHunt {
+            constructor() {
+                this.gridSize = 4;
+                this.totalCells = 16;
+                this.treasurePosition = 0;
+                this.searchCount = 0;
+                this.isSearching = false;
+                this.foundTreasure = false;
+                
+                this.initElements();
+                this.setupEventListeners();
+                this.resetGame();
+            }
+
+            initElements() {
+                this.gridElement = document.getElementById('grid');
+                this.gridSizeSelect = document.getElementById('gridSize');
+                this.startButton = document.getElementById('startSearch');
+                this.resetButton = document.getElementById('reset');
+                this.totalCellsSpan = document.getElementById('totalCells');
+                this.searchCountSpan = document.getElementById('searchCount');
+                this.treasureFoundSpan = document.getElementById('treasureFound');
+                this.classicalExpected = document.getElementById('classicalExpected');
+                this.quantumExpected = document.getElementById('quantumExpected');
+                this.classicalProgress = document.getElementById('classicalProgress');
+                this.quantumProgress = document.getElementById('quantumProgress');
+            }
+
+            setupEventListeners() {
+                this.gridSizeSelect.addEventListener('change', () => {
+                    this.gridSize = parseInt(this.gridSizeSelect.value);
+                    this.resetGame();
+                });
+
+                this.startButton.addEventListener('click', () => {
+                    if (!this.isSearching) {
+                        this.startQuantumSearch();
+                    }
+                });
+
+                this.resetButton.addEventListener('click', () => {
+                    this.resetGame();
+                });
+            }
+
+            resetGame() {
+                this.totalCells = this.gridSize * this.gridSize;
+                this.treasurePosition = Math.floor(Math.random() * this.totalCells);
+                this.searchCount = 0;
+                this.foundTreasure = false;
+                this.isSearching = false;
+
+                this.updateGridClass();
+                this.createGrid();
+                this.updateStats();
+                this.updateProgress();
+                
+                this.startButton.disabled = false;
+                this.startButton.textContent = 'Start Quantum Search';
+            }
+
+            updateGridClass() {
+                this.gridElement.className = `grid grid-${this.gridSize}x${this.gridSize}`;
+            }
+
+            createGrid() {
+                this.gridElement.innerHTML = '';
+                
+                for (let i = 0; i < this.totalCells; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.index = i;
+                    cell.textContent = '?';
+                    this.gridElement.appendChild(cell);
+                }
+            }
+
+            updateStats() {
+                this.totalCellsSpan.textContent = this.totalCells;
+                this.searchCountSpan.textContent = this.searchCount;
+                this.treasureFoundSpan.textContent = this.foundTreasure ? 'Yes' : 'No';
+                
+                // Update expected searches
+                const classicalExpected = Math.ceil(this.totalCells / 2);
+                const quantumExpected = Math.ceil(Math.sqrt(this.totalCells));
+                
+                this.classicalExpected.textContent = classicalExpected;
+                this.quantumExpected.textContent = quantumExpected;
+            }
+
+            updateProgress() {
+                const classicalExpected = Math.ceil(this.totalCells / 2);
+                const quantumExpected = Math.ceil(Math.sqrt(this.totalCells));
+                
+                const classicalPercent = Math.min((this.searchCount / classicalExpected) * 100, 100);
+                const quantumPercent = Math.min((this.searchCount / quantumExpected) * 100, 100);
+                
+                this.classicalProgress.style.width = `${classicalPercent}%`;
+                this.quantumProgress.style.width = `${quantumPercent}%`;
+            }
+
+            async startQuantumSearch() {
+                this.isSearching = true;
+                this.startButton.disabled = true;
+                this.startButton.textContent = 'Searching...';
+
+                // Simulate Grover's algorithm iterations
+                const optimalIterations = Math.ceil(Math.sqrt(this.totalCells));
+                
+                for (let iteration = 0; iteration < optimalIterations; iteration++) {
+                    await this.performGroverIteration();
+                    
+                    if (this.foundTreasure) {
+                        break;
+                    }
+                }
+
+                // Final measurement
+                await this.finalMeasurement();
+                
+                this.isSearching = false;
+                this.startButton.textContent = this.foundTreasure ? 'Treasure Found!' : 'Try Again';
+            }
+
+            async performGroverIteration() {
+                const cells = this.gridElement.querySelectorAll('.cell');
+                
+                // Show superposition state
+                cells.forEach(cell => {
+                    cell.classList.add('searching');
+                });
+
+                await this.sleep(600);
+
+                // Oracle phase (marks the treasure)
+                await this.sleep(400);
+
+                // Diffusion operator (amplitude amplification)
+                await this.sleep(400);
+
+                // Remove searching animation
+                cells.forEach(cell => {
+                    cell.classList.remove('searching');
+                });
+
+                this.searchCount++;
+                this.updateStats();
+                this.updateProgress();
+            }
+
+            async finalMeasurement() {
+                const cells = this.gridElement.querySelectorAll('.cell');
+                
+                // Simulate measurement collapse
+                for (let i = 0; i < this.totalCells; i++) {
+                    if (i === this.treasurePosition) continue;
+                    
+                    const cell = cells[i];
+                    cell.textContent = '✕';
+                    cell.style.opacity = '0.3';
+                    
+                    await this.sleep(30);
+                }
+
+                // Reveal the treasure
+                await this.sleep(500);
+                const treasureCell = cells[this.treasurePosition];
+                treasureCell.textContent = '★';
+                treasureCell.classList.add('treasure');
+                this.foundTreasure = true;
+                this.updateStats();
+
+                // Create celebration sparkles
+                this.createSparkles(treasureCell);
+            }
+
+            createSparkles(element) {
+                const rect = element.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                for (let i = 0; i < 30; i++) {
+                    setTimeout(() => {
+                        const sparkle = document.createElement('div');
+                        sparkle.className = 'sparkle';
+                        
+                        // Random position around the element
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = 20 + Math.random() * 40;
+                        const x = centerX + Math.cos(angle) * distance;
+                        const y = centerY + Math.sin(angle) * distance;
+                        
+                        sparkle.style.left = `${x}px`;
+                        sparkle.style.top = `${y}px`;
+                        
+                        // Random size and delay
+                        sparkle.style.width = `${3 + Math.random() * 5}px`;
+                        sparkle.style.height = sparkle.style.width;
+                        sparkle.style.animationDelay = `${Math.random() * 0.3}s`;
+                        
+                        document.body.appendChild(sparkle);
+                        
+                        // Remove after animation
+                        setTimeout(() => {
+                            sparkle.remove();
+                        }, 1000);
+                    }, i * 50);
+                }
+            }
+
+            sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        // Initialize the game
+        const game = new QuantumTreasureHunt();
+    </script>
+</body>
+</html>

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Constraint Solver</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --secondary-dark: #059669;
+            --accent: #f59e0b;
+            --accent-dark: #d97706;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.75rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(90deg, var(--accent), var(--light));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 1.15rem;
+            color: rgba(255, 255, 255, 0.85);
+            max-width: 600px;
+            margin: 0 auto;
+            font-weight: 400;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 200px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select, button {
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            color: var(--light);
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            border: none;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .game-area {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title::before {
+            content: "";
+            display: block;
+            width: 6px;
+            height: 1.25rem;
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .puzzle-grid {
+            display: grid;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-4x4 { grid-template-columns: repeat(4, 1fr); }
+        .grid-9x9 { grid-template-columns: repeat(9, 1fr); }
+
+        .cell {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            color: var(--light);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .cell.fixed {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent);
+        }
+
+        .cell.searching {
+            background: rgba(99, 102, 241, 0.3);
+            animation: pulse 1.5s infinite;
+        }
+
+        .cell.solution {
+            background: var(--success);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .cell.conflict {
+            background: var(--danger);
+            animation: shake 0.5s;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-item {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--light);
+        }
+
+        .algorithm-info {
+            margin-top: 1.5rem;
+        }
+
+        .algorithm-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .step {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .step-number {
+            background: var(--accent);
+            color: var(--dark);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .formula {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            margin-top: 1rem;
+            color: var(--light);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Sparkle animation */
+        @keyframes sparkle {
+            0% { transform: scale(0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: sparkle 1s ease-out forwards;
+            filter: drop-shadow(0 0 4px white);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Quantum Constraint Solver</h1>
+            <p class="subtitle">Demonstrating Grover's Algorithm for solving binary constraint satisfaction problems</p>
+        </header>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="problemType">Problem Type</label>
+                <select id="problemType">
+                    <option value="sudoku">Simple Sudoku (4x4)</option>
+                    <option value="binary">Binary Puzzle</option>
+                </select>
+            </div>
+            <button id="startSearch">
+                Run Grover's Algorithm
+            </button>
+            <button id="reset">
+                Reset Problem
+            </button>
+        </div>
+
+        <div class="game-area">
+            <div class="card">
+                <h2 class="section-title">Problem Grid</h2>
+                <div id="grid" class="puzzle-grid grid-4x4"></div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Variables</div>
+                        <div id="variableCount" class="stat-value">4</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Iterations</div>
+                        <div id="iterationCount" class="stat-value">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Solution Found</div>
+                        <div id="solutionFound" class="stat-value">No</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title">Grover's Algorithm</h2>
+                
+                <div class="algorithm-info">
+                    <p>This simulation demonstrates how Grover's algorithm can solve constraint satisfaction problems with quadratic speedup compared to classical methods.</p>
+                    
+                    <div class="algorithm-steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <strong>Initialization:</strong> Create superposition of all possible states
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <strong>Oracle:</strong> Mark solutions that satisfy all constraints
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <strong>Amplification:</strong> Increase probability amplitude of solutions
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <strong>Repeat:</strong> Apply steps 2-3 ≈ √N times
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula">
+                        Optimal iterations: π/4 × √(N/M) where N = possibilities, M = solutions
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class QuantumConstraintSolver {
+            constructor() {
+                this.problemType = 'sudoku';
+                this.gridSize = 4;
+                this.variableCount = 4;
+                this.fixedCells = [];
+                this.solution = [];
+                this.iterationCount = 0;
+                this.isSearching = false;
+                this.solutionFound = false;
+                
+                this.initElements();
+                this.setupEventListeners();
+                this.resetProblem();
+            }
+
+            initElements() {
+                this.gridElement = document.getElementById('grid');
+                this.problemTypeSelect = document.getElementById('problemType');
+                this.startButton = document.getElementById('startSearch');
+                this.resetButton = document.getElementById('reset');
+                this.variableCountSpan = document.getElementById('variableCount');
+                this.iterationCountSpan = document.getElementById('iterationCount');
+                this.solutionFoundSpan = document.getElementById('solutionFound');
+            }
+
+            setupEventListeners() {
+                this.problemTypeSelect.addEventListener('change', () => {
+                    this.problemType = this.problemTypeSelect.value;
+                    this.resetProblem();
+                });
+
+                this.startButton.addEventListener('click', () => {
+                    if (!this.isSearching) {
+                        this.runGroversAlgorithm();
+                    }
+                });
+
+                this.resetButton.addEventListener('click', () => {
+                    this.resetProblem();
+                });
+            }
+
+            resetProblem() {
+                this.iterationCount = 0;
+                this.solutionFound = false;
+                this.isSearching = false;
+                
+                if (this.problemType === 'sudoku') {
+                    this.setupSudokuProblem();
+                } else {
+                    this.setupBinaryPuzzle();
+                }
+                
+                this.updateGrid();
+                this.updateStats();
+                
+                this.startButton.disabled = false;
+                this.startButton.textContent = 'Run Grover\'s Algorithm';
+            }
+
+            setupSudokuProblem() {
+                this.gridSize = 4;
+                this.variableCount = 4;
+                this.gridElement.className = `puzzle-grid grid-4x4`;
+                
+                // Simple 4x4 Sudoku with 4 fixed cells
+                this.fixedCells = [
+                    { index: 0, value: 1 },
+                    { index: 5, value: 3 },
+                    { index: 10, value: 4 },
+                    { index: 15, value: 2 }
+                ];
+                
+                // This would be calculated by Grover's algorithm
+                this.solution = [1, 2, 4, 3, 3, 4, 2, 1, 2, 1, 3, 4, 4, 3, 1, 2];
+            }
+
+            setupBinaryPuzzle() {
+                this.gridSize = 4;
+                this.variableCount = 4;
+                this.gridElement.className = `puzzle-grid grid-4x4`;
+                
+                // Binary puzzle with 2 fixed cells
+                this.fixedCells = [
+                    { index: 0, value: 1 },
+                    { index: 3, value: 0 }
+                ];
+                
+                // This would be calculated by Grover's algorithm
+                this.solution = [1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1];
+            }
+
+            updateGrid() {
+                this.gridElement.innerHTML = '';
+                
+                for (let i = 0; i < this.gridSize * this.gridSize; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.index = i;
+                    
+                    const fixedCell = this.fixedCells.find(fc => fc.index === i);
+                    if (fixedCell) {
+                        cell.textContent = fixedCell.value;
+                        cell.classList.add('fixed');
+                    } else if (this.solutionFound && this.solution[i] !== undefined) {
+                        cell.textContent = this.solution[i];
+                        cell.classList.add('solution');
+                    } else {
+                        cell.textContent = '';
+                    }
+                    
+                    this.gridElement.appendChild(cell);
+                }
+            }
+
+            updateStats() {
+                this.variableCountSpan.textContent = this.variableCount;
+                this.iterationCountSpan.textContent = this.iterationCount;
+                this.solutionFoundSpan.textContent = this.solutionFound ? 'Yes' : 'No';
+            }
+
+            async runGroversAlgorithm() {
+                this.isSearching = true;
+                this.startButton.disabled = true;
+                this.startButton.textContent = 'Running...';
+                
+                // Optimal number of iterations for Grover's algorithm
+                const optimalIterations = Math.ceil(Math.sqrt(Math.pow(2, this.variableCount)));
+                
+                // Simulate Grover's iterations
+                for (let i = 0; i < optimalIterations; i++) {
+                    await this.performGroverIteration();
+                    
+                    // Random chance to find solution early (simulating probability)
+                    if (i > optimalIterations/2 && Math.random() > 0.7) {
+                        break;
+                    }
+                }
+                
+                // Final measurement
+                await this.finalMeasurement();
+                
+                this.isSearching = false;
+                this.startButton.textContent = this.solutionFound ? 'Solution Found!' : 'Try Again';
+            }
+
+            async performGroverIteration() {
+                const cells = this.gridElement.querySelectorAll('.cell:not(.fixed)');
+                
+                // Show superposition state
+                cells.forEach(cell => {
+                    cell.classList.add('searching');
+                    cell.textContent = Math.random() > 0.5 ? '0' : '1'; // Simulating superposition
+                });
+
+                await this.sleep(600);
+
+                // Oracle phase - mark solutions
+                await this.sleep(400);
+
+                // Diffusion operator - amplify solutions
+                await this.sleep(400);
+
+                // Remove searching animation
+                cells.forEach(cell => {
+                    cell.classList.remove('searching');
+                    cell.textContent = '';
+                });
+
+                this.iterationCount++;
+                this.updateStats();
+            }
+
+            async finalMeasurement() {
+                // Simulate measurement collapsing to a solution
+                const cells = this.gridElement.querySelectorAll('.cell:not(.fixed)');
+                
+                // First show conflicts
+                for (let i = 0; i < cells.length; i++) {
+                    const cell = cells[i];
+                    if (Math.random() > 0.7) { // Random conflicts
+                        cell.classList.add('conflict');
+                        await this.sleep(100);
+                        cell.classList.remove('conflict');
+                    }
+                }
+                
+                await this.sleep(500);
+                
+                // Then reveal solution
+                this.solutionFound = true;
+                this.updateGrid();
+                this.updateStats();
+                
+                // Add celebration sparkles
+                this.createSparkles();
+            }
+
+            createSparkles() {
+                const solutionCells = this.gridElement.querySelectorAll('.solution');
+                
+                solutionCells.forEach(cell => {
+                    const rect = cell.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    
+                    for (let i = 0; i < 5; i++) {
+                        setTimeout(() => {
+                            const sparkle = document.createElement('div');
+                            sparkle.className = 'sparkle';
+                            
+                            const angle = Math.random() * Math.PI * 2;
+                            const distance = 20 + Math.random() * 40;
+                            const x = centerX + Math.cos(angle) * distance;
+                            const y = centerY + Math.sin(angle) * distance;
+                            
+                            sparkle.style.left = `${x}px`;
+                            sparkle.style.top = `${y}px`;
+                            sparkle.style.width = `${3 + Math.random() * 5}px`;
+                            sparkle.style.height = sparkle.style.width;
+                            
+                            document.body.appendChild(sparkle);
+                            
+                            setTimeout(() => {
+                                sparkle.remove();
+                            }, 1000);
+                        }, i * 100);
+                    }
+                });
+            }
+
+            sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        // Initialize the solver
+        const solver = new QuantumConstraintSolver();
+    </script>
+</body>
+</html>
